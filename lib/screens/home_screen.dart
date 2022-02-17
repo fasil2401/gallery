@@ -76,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return key.isEmpty
               ? const Center(
                   child: Text(
-                    "Click",
+                    "Click images",
                     style: TextStyle(color: Colors.white),
                   ),
                 )
