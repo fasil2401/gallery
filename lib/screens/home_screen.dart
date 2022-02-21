@@ -22,14 +22,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   dynamic _imagepath;
   XFile? _image;
+   File? directoryFile;
+   var externaldir;
+   String? externaldirPath;
+
+   makeStorage() async{
+    externaldir = await getExternalStorageDirectory();
+    String newPath = "";
+    List<String> directoryList = externaldir!.path.split('/');
+    for(int i=1;i<directoryList.length;i++){
+      String tempPath = directoryList[i];
+      if(directoryList[i]!='Android'){
+        newPath += "/"+tempPath;
+      }else{break;}
+    }
+    newPath += "/CustomGallery";
+    externaldir = Directory(newPath);
+    externaldirPath = externaldir.path;
+    if(!await externaldir.exists()){
+      await externaldir.create(recursive: true);
+    }
+  }
+
   Future getImage() async {
-    Directory directory = await getApplicationDocumentsDirectory();
-    String directoryPath = directory.path;
+    // Directory directory = await getApplicationDocumentsDirectory();
+    // String directoryPath = directory.path;
     ImagePicker _imagePicker = ImagePicker();
     _image = await _imagePicker.pickImage(source: ImageSource.camera);
     if (_image != null) {
       final path = basename(_image!.path);
-      final File file = await File(_image!.path).copy('$directoryPath,$path');
+      final File file = await File(_image!.path).copy('$externaldirPath/$path');
       setState(() {
         _imagepath = file.path;
         box.add(DBModel(path: _imagepath));
@@ -44,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await Permission.camera.request();
     }
     if (checkStatus.isGranted) {
-      getImage();
+     getPermissionStorage();
     } else {
       const SnackBar(
         content: Text(
@@ -56,6 +78,30 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+ getPermissionStorage()async{
+   var storagePermission = await Permission.storage.status;
+   var managePermission = await Permission.manageExternalStorage.status;
+   var mediaPermission = await Permission.accessMediaLocation.status;
+   if(storagePermission.isGranted && managePermission.isGranted && mediaPermission.isGranted){
+    await makeStorage();
+     if(await externaldir.exists()){
+       getImage();
+     }
+   }else if(storagePermission.isDenied||managePermission.isDenied||mediaPermission.isDenied){
+     await Permission.storage.request();
+     await Permission.accessMediaLocation.request();
+     await Permission.manageExternalStorage.request();
+     if(storagePermission.isGranted && managePermission.isGranted){
+       makeStorage();
+       if(await externaldir.exists()){
+         getImage();
+       }
+     }
+   }else{
+     const SnackBar(content: Text("Please enable storage permission to continue",style: TextStyle(color: Colors.white),),backgroundColor: Colors.red,);
+     openAppSettings();
+   }
+ }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     List<DBModel> images = newbox.values.toList();
                     final data = images[index];
                     return ImageTile(
-                      imagepath: images[index].path,
+                      imagepath: data.path,
                       index: index,
                       imagebox: images,
                       value: data,

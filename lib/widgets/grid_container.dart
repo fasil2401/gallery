@@ -23,7 +23,7 @@ class ImageTile extends StatelessWidget {
       fit: BoxFit.fill,
       child: GestureDetector(
           onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (ctx)=> ViewImage(data: imagebox, index: index,)));
+          Navigator.of(context).push(MaterialPageRoute(builder: (ctx)=> ViewImage(data: imagebox, index: index, imagepath: imagepath,)));
           },
           child: Container(           
             padding:const EdgeInsets.all(50),

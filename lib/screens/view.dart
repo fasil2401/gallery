@@ -4,10 +4,12 @@ import 'package:gallery/model/db_model.dart';
 // import 'package:hive_flutter/adapters.dart';
 
 class ViewImage extends StatelessWidget {
+ 
   final List<DBModel> data;
   final int index;
+  final dynamic imagepath;
 
-  const ViewImage({Key? key, required this.data, required this.index})
+  const ViewImage({Key? key, required this.data, required this.index,required this.imagepath})
       : super(key: key);
 
   @override
@@ -57,7 +59,11 @@ class ViewImage extends StatelessWidget {
                           },
                           child: const Text("No")),
                       TextButton(
-                          onPressed: () {
+                          onPressed: ()async {
+                            File file = File(data[index].path);
+                            if(await file.exists()){
+                              await file.delete();
+                            }
                             data[index].delete();
                             Navigator.pop(context);
                             Navigator.pop(context);
